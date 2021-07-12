@@ -1,0 +1,100 @@
+Nume: Anghel Mihai-Gabriel
+Grupa: 323CD
+
+
+**Structuri folosite**
+
+   route_table_entry -> structura ce descrie o tabela de rutare ca in exemplul 
+                        din documentatie
+   arp_entry -> structura ce descrie o tabela arp ca in exemplul din
+                documentatie
+
+
+**Functii folosite**  
+
+    read_rtable -> primeste ca argumente o structura de tip route_table_entry
+		   si calea catre fisier. Aceasta functie citeste linie 
+                   cu linie din fisier, imparte informatia in campuri
+                   necesare tabelei si salveaza informatia in aceasta.
+
+    get_best_route -> primeste ca argumente o adresa ip si o structura
+                      route_table_entry. Functia gaseste cea mai buna ruta
+                      catre next-hop facand '&' intre ip-ul primit  
+                      si mask din tabela de rutare. In momentul in care s-a
+                      gasit un prefix egal cu rezultatul de mai sus, se 
+                      intoarce un pointer (&rtable[i]) catre cea mai buna ruta.
+                      Daca nu exista nicio ruta, intoarce NULL.
+     Pentru eficienta, sortez tabela de rutare(am observat ca tabela era 
+     sortata insa la sfarsit erau adaugate cateva adrese care nu erau ordonate)
+     folosind mergeSort(complexitate O(N*log N)). Cautarea rutei se face folosind
+     cautare binara (complexitate O(log N)) asadar, rezulta o complexitate
+     a procesului de cautare mai mica de O(N).  
+
+     get_arp_entry -> primeste o adresa ip si o structura arp_entry. Functia
+                      parcurge tabela ARP si daca in tabela exista adresa ip
+                      primita ca argument, intoarce un pointer (&arp_table[i]),
+                      altfel intoarce NULL.
+                       	
+    mergeSort -> functie care face sortarea tabelei de rutare.
+    
+    merge -> functie ajutatoare pentru functia mergesort.
+
+
+Tabela de rutare si tabela arp sunt structurate la fel ca in laboratorul 4
+(pentru simplitate).Parsarea tabelei de rutare se face cu functia "read_rtable".
+
+
+
+**Flow-ul programului**
+
+ - Se primeste un pachet
+ - Se extrag header-ele din payload-ul pachetului
+ - Dupa aceea se urmaresc etapele din documentatia temei astfel:
+ - Se verifica tipul header-ului ethernet al pachetului si in functie de
+   tipul pachetului se realizeaza functionalitatile router-ului.
+      Daca:  este pachet IP
+             pachetul ii este adresat router-ului
+  	     pachetul este icmp echo request
+      atunci se trimite icmp echo reply catre sursa, iar pachetul primit 
+      se arunca.
+      
+      Daca este pachet ARP request, completez header-ul ethernet si trimit
+      un reply cu adresa MAC.
+      Daca este un pachet ARP reply, adaug o noua inregistrare in tabela arp
+      cu adresa ip sursa si adresa Mac sursa ale pachetului apoi daca in 
+      coada exista pachete, extrag cate un pachet si daca adresa
+      destinatie a pachetului este egala cu adresa sursa a pachetului reply,
+      il trimit catre acea adresa. Folosesc doua cozi pentru a putea restaura
+      coada initiala in cazul in care sunt pachete si cu destinatie diferita.
+
+ - In cazul in care ttl <= 1, trimit un pachet icmp time exceeded catre sursa
+   iar pachetul primit il arunc.
+ - Verific checksum, iar daca este alterat, arunc pachetul
+ - Actualizez ttl si checksum pentru pachet
+ - Daca am ajuns in acest punct, trebuie sa fac rutarea pachetului
+    - Se cauta cea mai buna ruta pentru adresa destinatie a pachetului, daca 
+      nu se gaseste nici una, se trimite un pachet icmp destination unreachable
+      catre sursa.
+    - Se cauta adresa next-hop in tabela ARP pentru a putea actualiza header-ul
+      ethernet. Daca se gaseste, fac actualizarea si trimit pachetul catre
+      destinatie. In cazul in care in tabela ARP nu exista adresa cautata, pun 
+      pachetul intr-o coada si trimit un arp request catre destinatie pentru
+      a-mi returna adresa sa MAC pentru a putea face rutarea.  
+ 
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	
